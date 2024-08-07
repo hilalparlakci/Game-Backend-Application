@@ -1,6 +1,8 @@
 package com.example.GameApplication.controller;
 
+import com.example.GameApplication.dto.CreateUserResponse;
 import com.example.GameApplication.dto.UpdateLevelRequest;
+import com.example.GameApplication.dto.UpdateLevelResponse;
 import com.example.GameApplication.model.User;
 import com.example.GameApplication.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -15,15 +17,26 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/create")
-    public ResponseEntity<User> createUser() {
+    public ResponseEntity<CreateUserResponse> createUser() {
         User user = userService.createUser();
-        return ResponseEntity.ok(user);
-
+        CreateUserResponse response = new CreateUserResponse(
+                user.getId(),
+                user.getLevel(),
+                user.getCoin(),
+                user.getCountry().getName()
+        );
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/updateLevel")
-    public ResponseEntity<User> updateLevel(@RequestBody UpdateLevelRequest request) {
+    public ResponseEntity<UpdateLevelResponse> updateLevel(@RequestBody UpdateLevelRequest request) {
         User user = userService.updateLevel(request);
-        return ResponseEntity.ok(user);
+        UpdateLevelResponse response = new UpdateLevelResponse(
+                user.getId(),
+                user.getLevel(),
+                user.getCoin(),
+                user.getCountry().getName()
+        );
+        return ResponseEntity.ok(response);
     }
 }

@@ -21,14 +21,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser() {
-        // Ülkeler listesi alınır ve rastgele bir ülke seçilir
         List<Country> countries = countryService.findAll();
         if (countries.isEmpty()) {
             throw new RuntimeException("No countries available");
         }
         Country country = countries.get(new Random().nextInt(countries.size()));
 
-        // Kullanıcı nesnesi oluşturulur
         User user = new User();
         user.setLevel(1);
         user.setCoin(5000);
