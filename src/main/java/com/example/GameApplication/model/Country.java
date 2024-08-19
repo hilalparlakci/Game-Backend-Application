@@ -10,16 +10,10 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "country")
 public class Country {
     @Id
-    @Column(name = "country_name")
+    @Column(name = "name")
     private String name;
 
-    @OneToMany(mappedBy = "country")
-    @JsonManagedReference
-    private List<User> users;
-
-    public Country(String name) {
-        this.name = name;
-    }
 }

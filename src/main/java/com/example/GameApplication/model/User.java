@@ -1,12 +1,13 @@
 package com.example.GameApplication.model;
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.HashSet;
+import java.util.Set;
 
-@Data
 @Entity
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
@@ -23,11 +24,14 @@ public class User {
     @Column(name = "user_coin")
     private int coin;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "country_name", nullable = false)
     @JsonBackReference
     private Country country;
 
-    // getter ve setter metodları
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TournamentGroupMember> tournamentGroupMembers = new HashSet<>();
+
 }
 
