@@ -78,3 +78,6 @@ WHERE user_id = 1;
 UPDATE users
 SET user_level = 21
 WHERE user_id = 2;
+
+SET FOREIGN_KEY_CHECKS = 0;
+
