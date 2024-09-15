@@ -8,10 +8,8 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tournament {
-
     private Long tournamentId;
     private LocalDate date;
-
     public Tournament(LocalDate date) {
         this.date = date;
     }

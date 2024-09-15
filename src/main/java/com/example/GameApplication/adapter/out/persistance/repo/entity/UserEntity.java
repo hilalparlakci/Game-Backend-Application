@@ -40,10 +40,10 @@ public class UserEntity {
 
     public User toModel() {
         return new User(
-               this.getId(),
-                this.getLevel(),
-                this.getCoin(),
-                this.getCountry().toModel()
+               this.id,
+                this.level,
+                this.coin,
+                this.country.toModel()
         );
     }
 

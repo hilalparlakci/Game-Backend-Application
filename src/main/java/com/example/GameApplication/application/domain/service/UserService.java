@@ -25,7 +25,7 @@ public class UserService {
         Country country = countries.get(new Random().nextInt(countries.size()));
 
         User user = new User();
-        user.setLevel(1);
+        user.setLevel(50);
         user.setCoin(5000);
         user.setCountry(country);
 
@@ -38,6 +38,7 @@ public class UserService {
 
         user.setLevel(user.getLevel() + 1);
         user.setCoin(user.getCoin() + 25);
+
 
         return userPersistencePort.save(user);
     }

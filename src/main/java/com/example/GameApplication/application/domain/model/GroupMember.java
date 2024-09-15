@@ -12,4 +12,5 @@ import lombok.Setter;
 public class GroupMember {
     private Long userId;
     private int score;
+    String country;
 }

@@ -5,6 +5,7 @@ import com.example.GameApplication.application.domain.model.TournamentGroupMembe
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TournamentGroupMemberPersistencePort {
     boolean existsByUserIdAndTournamentGroup_Tournament_Date(Long userId, LocalDate date);
@@ -14,4 +15,6 @@ public interface TournamentGroupMemberPersistencePort {
     TournamentGroupMember save(TournamentGroupMember groupMember);
 
     List<TournamentGroupMember> findByTournamentGroupId(Long tournamentGroupId);
+
+    Optional<TournamentGroupMember> findById(Long tournamentGroupMemberId);
 }

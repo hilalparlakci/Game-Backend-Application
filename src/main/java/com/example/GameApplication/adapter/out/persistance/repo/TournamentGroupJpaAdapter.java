@@ -8,6 +8,7 @@ import com.example.GameApplication.application.port.out.TournamentGroupPersisten
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -29,12 +30,14 @@ public class TournamentGroupJpaAdapter implements TournamentGroupPersistencePort
 
     @Override
     public Optional<TournamentGroup> getSuitableTournamentGroup(Tournament tournament, User user) {
-        Optional<TournamentGroupEntity> suitableGroupEntity = tournamentGroupRepository
-                .findFirstGroupWithoutUserFromCountry(
-                        new TournamentEntity(tournament),
-                        new CountryEntity(user.getCountry())
-                );
+        List<TournamentGroupEntity> groups = tournamentGroupRepository.findGroupsWithoutUserFromCountry(new TournamentEntity(tournament), new CountryEntity(user.getCountry()));
 
-        return suitableGroupEntity.map(TournamentGroupEntity::toModel);
+        if (!groups.isEmpty()) {
+            TournamentGroupEntity firstGroup = groups.get(0);
+            return Optional.of(firstGroup.toModel());
+        } else {
+            return Optional.empty();
+        }
     }
+
 }

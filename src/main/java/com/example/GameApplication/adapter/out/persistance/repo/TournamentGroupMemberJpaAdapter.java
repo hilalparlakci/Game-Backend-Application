@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Component
@@ -38,6 +39,12 @@ public class TournamentGroupMemberJpaAdapter implements TournamentGroupMemberPer
         return tournamentGroupMemberRepository.findByTournamentGroupId(tournamentGroupId).stream()
                 .map(TournamentGroupMemberEntity::toModel)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Optional<TournamentGroupMember> findById(Long tournamentGroupMemberId) {
+        return tournamentGroupMemberRepository.findById(tournamentGroupMemberId)
+                .map(TournamentGroupMemberEntity::toModel);
     }
 
 }

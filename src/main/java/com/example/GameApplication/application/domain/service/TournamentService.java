@@ -3,10 +3,7 @@ package com.example.GameApplication.application.domain.service;
 import com.example.GameApplication.application.domain.model.*;
 import com.example.GameApplication.application.domain.dto.request.EnterTournamentRequest;
 import com.example.GameApplication.application.domain.dto.response.EnterTournamentResponse;
-import com.example.GameApplication.application.port.out.TournamentGroupMemberPersistencePort;
-import com.example.GameApplication.application.port.out.TournamentGroupPersistencePort;
-import com.example.GameApplication.application.port.out.TournamentPersistencePort;
-import com.example.GameApplication.application.port.out.UserPersistencePort;
+import com.example.GameApplication.application.port.out.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,6 +12,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -26,6 +24,7 @@ public class TournamentService {
     private final TournamentPersistencePort tournamentPersistencePort;
     private final TournamentGroupPersistencePort tournamentGroupPersistencePort;
     private final TournamentGroupMemberPersistencePort tournamentGroupMemberPersistencePort;
+    private final RewardPersistencePort rewardPersistencePort;
 
     @Scheduled(cron = "0 0 0 * * ?", zone = "UTC")
     public void startNewTournament() {
@@ -64,7 +63,7 @@ public class TournamentService {
     }
 
     @Transactional
-    public void updateTournamentGroupStatus(Long tournamentGroupId) {
+    public TournamentGroup updateTournamentGroupStatus(Long tournamentGroupId) {
         TournamentGroup group = tournamentGroupPersistencePort.findById(tournamentGroupId)
                 .orElseThrow(() -> new RuntimeException("Tournament Group not found"));
 
@@ -72,7 +71,7 @@ public class TournamentService {
 
         //group size must be 5
         group.setStarted(memberCount >= 5);
-        tournamentGroupPersistencePort.save(group);
+        return tournamentGroupPersistencePort.save(group);
 
     }
 
@@ -104,28 +103,38 @@ public class TournamentService {
                 .orElseGet(() -> {
                     TournamentGroup newGroup = new TournamentGroup();
                     newGroup.setTournament(tournament);
-                    tournamentGroupPersistencePort.save(newGroup);
                     return newGroup;
                 });
+
+        suitableTournamentGroup = tournamentGroupPersistencePort.save(suitableTournamentGroup);
 
         TournamentGroupMember tournamentGroupMember = new TournamentGroupMember();
         tournamentGroupMember.setUserId(user.getId());
         tournamentGroupMember.setTournamentGroupId(suitableTournamentGroup.getTournamentGroupId());
         tournamentGroupMember.setScore(0);
 
-        tournamentGroupMemberPersistencePort.save(tournamentGroupMember);
+        tournamentGroupMember = tournamentGroupMemberPersistencePort.save(tournamentGroupMember);
 
-        updateTournamentGroupStatus(suitableTournamentGroup.getTournamentGroupId());
+        Reward reward = new Reward();
+        reward.setRewardAmount(0L);
+        reward.setClaimed(false);
+        reward.setTournamentGroupMemberId(tournamentGroupMember.getId());
+        reward.setTournamentGroupMember(tournamentGroupMember);
+
+        rewardPersistencePort.save(reward);
+
+        suitableTournamentGroup = updateTournamentGroupStatus(suitableTournamentGroup.getTournamentGroupId());
 
         List<TournamentGroupMember> tournamentGroupMembers = tournamentGroupMemberPersistencePort
                 .findByTournamentGroupId(suitableTournamentGroup.getTournamentGroupId());
 
         List<GroupMember> groupMembers = tournamentGroupMembers.stream()
-                .map(member -> new GroupMember(member.getUserId(), member.getScore()))
+                .map(member -> userPersistencePort.findById(member.getUserId())
+                        .map(tournamentuser -> new GroupMember(member.getUserId(), member.getScore(), tournamentuser.getCountry().getName()))
+                        .orElse(null))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
-        return new EnterTournamentResponse(tournament.getTournamentId(), groupMembers);
+        return new EnterTournamentResponse(tournament.getTournamentId(), suitableTournamentGroup.getTournamentGroupId(), groupMembers);
     }
 }
-
-

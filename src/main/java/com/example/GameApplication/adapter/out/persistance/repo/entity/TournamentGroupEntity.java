@@ -1,8 +1,6 @@
 package com.example.GameApplication.adapter.out.persistance.repo.entity;
 
-import com.example.GameApplication.application.domain.model.Tournament;
 import com.example.GameApplication.application.domain.model.TournamentGroup;
-import com.example.GameApplication.application.domain.model.TournamentGroupMember;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -10,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Entity
@@ -38,14 +37,7 @@ public class TournamentGroupEntity {
     private Set<TournamentGroupMemberEntity> tournamentGroupMembers = new HashSet<>();
 
     public TournamentGroup toModel() {
-        TournamentGroup tournamentGroup = new TournamentGroup(
-                this.getTournamentGroupId(),
-                this.isStarted(),
-                this.isHasEnded(),
-                this.tournament.toModel()
-        );
-
-        return tournamentGroup;
+        return new TournamentGroup(this.tournamentGroupId, this.isStarted, this.hasEnded, this.tournament.toModel());
     }
 
     public TournamentGroupEntity(TournamentGroup model) {
@@ -54,5 +46,4 @@ public class TournamentGroupEntity {
         this.hasEnded = model.isHasEnded();
         this.tournament = new TournamentEntity(model.getTournament());
     }
-
 }

@@ -32,10 +32,7 @@ public class TournamentEntity {
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TournamentGroupEntity> tournamentGroups = new HashSet<>();
 
-    public TournamentEntity(LocalDate date) { this.date = date; }
-
     public Tournament toModel() {
-
         return new Tournament( this.getTournamentId(), this.getDate() );
     }
 

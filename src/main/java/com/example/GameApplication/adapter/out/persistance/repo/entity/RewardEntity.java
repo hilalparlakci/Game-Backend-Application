@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Data
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "reward")
 public class RewardEntity {
@@ -22,29 +23,29 @@ public class RewardEntity {
     @Column(name = "is_claimed")
     private boolean isClaimed;
 
-    @OneToOne(mappedBy = "reward")
+    @Column(name = "tournament_group_member_id")
+    private Long tournamentGroupMemberId;
+
+    @OneToOne
+    @JoinColumn(name = "tournament_group_member_id", referencedColumnName = "tournament_group_member_id", insertable = false, updatable = false)
     private TournamentGroupMemberEntity tournamentGroupMember;
 
-    public RewardEntity() {
-        this.rewardAmount = 0L;
-        this.isClaimed = false;
-
-    }
-
-    public Reward toModel(RewardEntity entity) {
-
+    public Reward toModel() {
         return new Reward(
-                entity.getRewardId(),
-                entity.getRewardAmount(),
-                entity.isClaimed()
+                this.rewardId,
+                this.rewardAmount,
+                this.isClaimed,
+                this.tournamentGroupMemberId,
+                this.tournamentGroupMember.toModel()
+
         );
     }
 
     public RewardEntity(Reward model) {
-        this.setRewardId(model.getRewardId());
-        this.setRewardAmount(model.getRewardAmount());
-        this.setClaimed(model.isClaimed());
-
+        this.rewardId = model.getRewardId();
+        this.rewardAmount = model.getRewardAmount();
+        this.isClaimed = model.isClaimed();
+        this.tournamentGroupMember = new TournamentGroupMemberEntity(model.getTournamentGroupMember());
+        tournamentGroupMemberId = model.getTournamentGroupMemberId();
     }
-
 }

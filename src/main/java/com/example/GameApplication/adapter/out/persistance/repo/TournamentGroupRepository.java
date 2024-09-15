@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface TournamentGroupRepository extends JpaRepository<TournamentGroupEntity, Long> {
     @Query("SELECT tg FROM TournamentGroupEntity tg " +
@@ -15,6 +15,7 @@ public interface TournamentGroupRepository extends JpaRepository<TournamentGroup
             "AND NOT EXISTS (SELECT 1 FROM TournamentGroupMemberEntity tgm " +
             "WHERE tgm.tournamentGroup = tg " +
             "AND tgm.user.country = :country)")
-    Optional<TournamentGroupEntity> findFirstGroupWithoutUserFromCountry(@Param("tournament") TournamentEntity tournament,
-                                                                         @Param("country") CountryEntity country);
+    List<TournamentGroupEntity> findGroupsWithoutUserFromCountry(@Param("tournament") TournamentEntity tournament,
+                                                                 @Param("country") CountryEntity country);
+
 }

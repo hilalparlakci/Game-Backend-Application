@@ -1,13 +1,14 @@
+SET FOREIGN_KEY_CHECKS = 0;
+
 CREATE TABLE country (
     name VARCHAR(255) PRIMARY KEY
 );
 
-INSERT INTO country (name) VALUES ('Turkey');
+INSERT INTO country (name) VALUES ('Türkiye');
 INSERT INTO country (name) VALUES ('United States');
 INSERT INTO country (name) VALUES ('United Kingdom');
 INSERT INTO country (name) VALUES ('France');
 INSERT INTO country (name) VALUES ('Germany');
-
 
 CREATE TABLE users (
                        user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -34,50 +35,26 @@ CREATE TABLE tournamentgroup (
                                          ON DELETE CASCADE
 );
 
-
 CREATE TABLE tournamentgroupmember (
                                        tournament_group_member_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                                       user_id BIGINT,
-                                       tournament_group_id BIGINT,
+                                       user_id BIGINT NOT NULL,
+                                       tournament_group_id BIGINT NOT NULL,
                                        score INT NOT NULL,
-                                       reward_id BIGINT,
+                                       CONSTRAINT fk_user
+                                           FOREIGN KEY (user_id)
+                                               REFERENCES users(user_id),
                                        CONSTRAINT fk_tournament_group
                                            FOREIGN KEY (tournament_group_id)
                                                REFERENCES tournamentgroup(tournament_group_id)
-                                               ON DELETE CASCADE,
-                                       CONSTRAINT fk_user
-                                           FOREIGN KEY (user_id)
-                                               REFERENCES users(user_id)
 );
 CREATE TABLE reward (
                         reward_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                        reward_amount BIGINT,
-                        is_claimed BOOLEAN,
-                        tournament_group_member_id BIGINT,
+                        reward_amount BIGINT NOT NULL,
+                        is_claimed BOOLEAN NOT NULL,
+                        tournament_group_member_id BIGINT UNIQUE NOT NULL,
                         CONSTRAINT fk_tournament_group_member
                             FOREIGN KEY (tournament_group_member_id)
                                 REFERENCES tournamentgroupmember(tournament_group_member_id)
 );
 
-ALTER TABLE tournamentgroupmember
-    ADD CONSTRAINT fk_reward
-        FOREIGN KEY (reward_id)
-            REFERENCES reward(reward_id);
-
-INSERT INTO tournament (tournament_date)
-VALUES (CURDATE());
-
-UPDATE users
-SET user_level = 21
-WHERE user_id = 3;
-
-UPDATE users
-SET user_level = 21
-WHERE user_id = 1;
-
-UPDATE users
-SET user_level = 21
-WHERE user_id = 2;
-
-SET FOREIGN_KEY_CHECKS = 0;
-
+SET FOREIGN_KEY_CHECKS = 1;

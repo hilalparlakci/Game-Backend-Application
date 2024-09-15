@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class EnterTournamentResponse {
     private Long tournamentId;
+    private Long tournamentGroupId;
     private List<GroupMember> groupMembers;
 
 }

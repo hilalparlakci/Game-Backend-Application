@@ -27,11 +27,6 @@ public class TournamentGroupMemberEntity {
     @Column(name = "score")
     private int score;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "reward_id", referencedColumnName = "reward_id")
-    private RewardEntity reward;
-
-    @Getter
     @ManyToOne
     @JoinColumn(name = "tournament_group_id", insertable = false, updatable = false)
     private TournamentGroupEntity tournamentGroup;
@@ -42,17 +37,17 @@ public class TournamentGroupMemberEntity {
 
     public TournamentGroupMember toModel() {
         return new TournamentGroupMember(
-                this.getId(),
-                this.getUserId(),
-                this.getTournamentGroupId(),
-                this.getScore()
+                this.id,
+                this.userId,
+                this.tournamentGroupId,
+                this.score
         );
     }
-    
+
     public TournamentGroupMemberEntity(TournamentGroupMember model) {
-        this.setId(model.getId());
-        this.setUserId(model.getUserId());
-        this.setTournamentGroupId(model.getTournamentGroupId());
-        this.setScore(model.getScore());
+        this.id = model.getId();
+        this.userId = model.getUserId();
+        this.tournamentGroupId = model.getTournamentGroupId();
+        this.score = model.getScore();
     }
 }
