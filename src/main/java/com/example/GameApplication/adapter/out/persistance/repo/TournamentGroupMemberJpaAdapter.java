@@ -42,8 +42,14 @@ public class TournamentGroupMemberJpaAdapter implements TournamentGroupMemberPer
     }
 
     @Override
-    public Optional<TournamentGroupMember> findById(Long tournamentGroupMemberId) {
-        return tournamentGroupMemberRepository.findById(tournamentGroupMemberId)
+    public Optional<TournamentGroupMember> findMostRecentByUserId(Long userId) {
+        return tournamentGroupMemberRepository.findMostRecentByUserId(userId)
+                .map(TournamentGroupMemberEntity::toModel);
+    }
+
+    @Override
+    public Optional<TournamentGroupMember> findByUserId(Long userId) {
+        return tournamentGroupMemberRepository.findByUserId(userId)
                 .map(TournamentGroupMemberEntity::toModel);
     }
 

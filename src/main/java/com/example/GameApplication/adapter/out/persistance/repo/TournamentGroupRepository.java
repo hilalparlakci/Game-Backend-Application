@@ -17,5 +17,5 @@ public interface TournamentGroupRepository extends JpaRepository<TournamentGroup
             "AND tgm.user.country = :country)")
     List<TournamentGroupEntity> findGroupsWithoutUserFromCountry(@Param("tournament") TournamentEntity tournament,
                                                                  @Param("country") CountryEntity country);
-
+    List<TournamentGroupEntity> findByTournament(TournamentEntity tournament);
 }

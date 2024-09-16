@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TournamentGroupMemberRepository extends JpaRepository<TournamentGroupMemberEntity, Long> {
@@ -19,4 +20,7 @@ public interface TournamentGroupMemberRepository extends JpaRepository<Tournamen
     @Query("SELECT tgm FROM TournamentGroupMemberEntity tgm WHERE tgm.tournamentGroup.tournamentGroupId = :tournamentGroupId")
     List<TournamentGroupMemberEntity> findByTournamentGroupId(@Param("tournamentGroupId") Long tournamentGroupId);
 
+    @Query("SELECT tgm FROM TournamentGroupMemberEntity tgm WHERE tgm.user.id = :userId ORDER BY tgm.id DESC")
+    Optional<TournamentGroupMemberEntity> findMostRecentByUserId(Long userId);
+    Optional<TournamentGroupMemberEntity> findByUserId(Long userId);
 }

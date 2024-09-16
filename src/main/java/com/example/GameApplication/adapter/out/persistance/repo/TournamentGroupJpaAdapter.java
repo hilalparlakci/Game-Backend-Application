@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -38,6 +39,13 @@ public class TournamentGroupJpaAdapter implements TournamentGroupPersistencePort
         } else {
             return Optional.empty();
         }
+    }
+
+    @Override
+    public List<TournamentGroup> findByTournament(Tournament tournament) {
+        return tournamentGroupRepository.findByTournament(new TournamentEntity()).stream()
+                .map(TournamentGroupEntity::toModel)
+                .collect(Collectors.toList());
     }
 
 }

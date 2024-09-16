@@ -24,13 +24,33 @@ public class TournamentService {
     private final TournamentPersistencePort tournamentPersistencePort;
     private final TournamentGroupPersistencePort tournamentGroupPersistencePort;
     private final TournamentGroupMemberPersistencePort tournamentGroupMemberPersistencePort;
-    private final RewardPersistencePort rewardPersistencePort;
+    private final RewardService rewardService;
+    private final UserService userService;
 
     @Scheduled(cron = "0 0 0 * * ?", zone = "UTC")
     public void startNewTournament() {
         LocalDate today = LocalDate.now();
         Tournament tournament = new Tournament(today);
         tournamentPersistencePort.save(tournament);
+    }
+
+    @Scheduled(cron = "0 0 20 * * ?", zone = "UTC")
+    @Transactional
+    public void endActiveTournaments() {
+        LocalDate today = LocalDate.now();
+
+        Tournament tournament = tournamentPersistencePort.findByDate(today)
+                .orElseThrow(() -> new RuntimeException("No tournament found for today"));
+
+        List<TournamentGroup> tournamentGroups = tournamentGroupPersistencePort
+                .findByTournament(tournament);
+
+        tournamentGroups.forEach(group -> {
+            if (!group.isHasEnded()) {
+                group.setHasEnded(true);
+                tournamentGroupPersistencePort.save(group);
+            }
+        });
     }
 
     public Tournament getActiveTournament() {
@@ -69,21 +89,12 @@ public class TournamentService {
 
         long memberCount = tournamentGroupMemberPersistencePort.countMembersByTournamentGroup(group);
 
-        //group size must be 5
-        group.setStarted(memberCount >= 5);
+        group.setStarted(memberCount == 5);  //group size must be 5
         return tournamentGroupPersistencePort.save(group);
-
     }
 
-    @Transactional
-    public EnterTournamentResponse enterTournament(EnterTournamentRequest request) {
-        Long userId = request.getId();
-        if (userId == null) {
-            throw new RuntimeException("hey no null id entry");
-        }
-
-        User user = userPersistencePort.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+    private void validateUserParticipation(User user) {
+        Long id = user.getId();
 
         if (user.getLevel() < 20) {
             throw new RuntimeException("User must be at least level 20 to participate");
@@ -92,49 +103,76 @@ public class TournamentService {
             throw new RuntimeException("User must have at least 1000 coins to participate");
         }
 
-        if (isUserInActiveTournament(userId)) {
+        if (isUserInActiveTournament(id)) {
             throw new RuntimeException("User is already in an active tournament");
         }
 
-        Tournament tournament = getActiveTournament();
-        Optional<TournamentGroup> suitableTournamentGroupOptional = tournamentGroupPersistencePort.getSuitableTournamentGroup(tournament, user);
+        Optional<TournamentGroupMember> tournamentGroupMemberOpt = tournamentGroupMemberPersistencePort.findMostRecentByUserId(id);
 
-        TournamentGroup suitableTournamentGroup = suitableTournamentGroupOptional
+        if (tournamentGroupMemberOpt.isPresent()) {
+            TournamentGroupMember tournamentGroupMember = tournamentGroupMemberOpt.get();
+            if (!rewardService.isRewardClaimed(tournamentGroupMember)) {
+                throw new RuntimeException("The previous tournament reward has not been claimed yet");
+            }
+        }
+    }
+
+    public User fetchValidUser(Long userId) {
+        User user = userPersistencePort.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        validateUserParticipation(user);
+        return user;
+    }
+
+    public TournamentGroup findOrCreateSuitableGroup(Tournament tournament, User user) {
+        return tournamentGroupPersistencePort.getSuitableTournamentGroup(tournament, user)
                 .orElseGet(() -> {
                     TournamentGroup newGroup = new TournamentGroup();
                     newGroup.setTournament(tournament);
-                    return newGroup;
+                    return tournamentGroupPersistencePort.save(newGroup);
                 });
+    }
 
-        suitableTournamentGroup = tournamentGroupPersistencePort.save(suitableTournamentGroup);
-
+    public TournamentGroupMember addUserToGroup(TournamentGroup tournamentGroup, User user) {
         TournamentGroupMember tournamentGroupMember = new TournamentGroupMember();
         tournamentGroupMember.setUserId(user.getId());
-        tournamentGroupMember.setTournamentGroupId(suitableTournamentGroup.getTournamentGroupId());
+        tournamentGroupMember.setTournamentGroupId(tournamentGroup.getTournamentGroupId());
         tournamentGroupMember.setScore(0);
 
-        tournamentGroupMember = tournamentGroupMemberPersistencePort.save(tournamentGroupMember);
+        return tournamentGroupMemberPersistencePort.save(tournamentGroupMember);
+    }
 
-        Reward reward = new Reward();
-        reward.setRewardAmount(0L);
-        reward.setClaimed(false);
-        reward.setTournamentGroupMemberId(tournamentGroupMember.getId());
-        reward.setTournamentGroupMember(tournamentGroupMember);
-
-        rewardPersistencePort.save(reward);
-
-        suitableTournamentGroup = updateTournamentGroupStatus(suitableTournamentGroup.getTournamentGroupId());
-
+    public List<GroupMember> fetchGroupMembers(TournamentGroup suitableTournamentGroup) {
         List<TournamentGroupMember> tournamentGroupMembers = tournamentGroupMemberPersistencePort
                 .findByTournamentGroupId(suitableTournamentGroup.getTournamentGroupId());
 
-        List<GroupMember> groupMembers = tournamentGroupMembers.stream()
+        return tournamentGroupMembers.stream()
                 .map(member -> userPersistencePort.findById(member.getUserId())
-                        .map(tournamentuser -> new GroupMember(member.getUserId(), member.getScore(), tournamentuser.getCountry().getName()))
+                        .map(tournamentUser -> new GroupMember(member.getUserId(), member.getScore(), tournamentUser.getCountry().getName()))
                         .orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public EnterTournamentResponse enterTournament(EnterTournamentRequest request) {
+        Long userId = request.getId();
+        userService.validateUserId(userId);
+
+        User user = fetchValidUser(userId);
+        Tournament tournament = getActiveTournament();
+
+        TournamentGroup suitableTournamentGroup = findOrCreateSuitableGroup(tournament, user);
+        TournamentGroupMember tournamentGroupMember = addUserToGroup(suitableTournamentGroup, user);
+
+        rewardService.createRewardForMember(tournamentGroupMember);
+
+        suitableTournamentGroup = updateTournamentGroupStatus(suitableTournamentGroup.getTournamentGroupId());
+
+        List<GroupMember> groupMembers = fetchGroupMembers(suitableTournamentGroup);
 
         return new EnterTournamentResponse(tournament.getTournamentId(), suitableTournamentGroup.getTournamentGroupId(), groupMembers);
     }
+
 }

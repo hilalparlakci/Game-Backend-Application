@@ -7,8 +7,6 @@ import java.util.Optional;
 
 public interface CountryPersistencePort {
     List<Country> findAll();
-
     Optional<Country> findByName(String name);
-
     void save(Country country);
 }

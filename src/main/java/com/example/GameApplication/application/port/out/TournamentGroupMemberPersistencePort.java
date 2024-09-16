@@ -9,12 +9,9 @@ import java.util.Optional;
 
 public interface TournamentGroupMemberPersistencePort {
     boolean existsByUserIdAndTournamentGroup_Tournament_Date(Long userId, LocalDate date);
-
     long countMembersByTournamentGroup(TournamentGroup group);
-
     TournamentGroupMember save(TournamentGroupMember groupMember);
-
     List<TournamentGroupMember> findByTournamentGroupId(Long tournamentGroupId);
-
-    Optional<TournamentGroupMember> findById(Long tournamentGroupMemberId);
+    Optional<TournamentGroupMember> findMostRecentByUserId(Long tournamentGroupMemberId);
+    Optional<TournamentGroupMember> findByUserId(Long userId);
 }
